@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ember & Oak — Fine Dining</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0806;--fg:#f0e8dc;--fg2:#a89c8c;--fg3:#665a4e;--gold:#c8a060;--gold2:#e8c88a;--gold3:#fff0c8;--serif:'Cormorant Garamond',serif;--sans:'Outfit',sans-serif}
+html{scroll-behavior:smooth;background:var(--bg);color:var(--fg);font-family:var(--sans)}
+body{overflow-x:hidden;-webkit-font-smoothing:antialiased}
+::selection{background:var(--gold);color:var(--bg)}
+img{display:block;max-width:100%}
+
+/* ── SCROLL PROGRESS ── */
+.scroll-progress{position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,var(--gold),var(--gold2));z-index:300;transition:width .1s}
+
+/* ── FIRE CANVAS ── */
+#fire-canvas{position:absolute;bottom:0;left:0;width:100%;height:100%;pointer-events:none;z-index:3}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;padding:1.5rem 5%;display:flex;justify-content:space-between;align-items:center;background:rgba(10,8,6,.85);backdrop-filter:blur(20px);border-bottom:1px solid rgba(200,160,96,.1);transition:all .4s}
+nav.scrolled{border-bottom-color:rgba(200,160,96,.2);box-shadow:0 4px 40px rgba(0,0,0,.4)}
+.logo{font-family:var(--serif);font-size:1.4rem;font-weight:400;color:var(--gold);text-decoration:none;font-style:italic;letter-spacing:.04em;transition:color .3s}
+.logo:hover{color:var(--gold2)}
+.nav-r{display:flex;align-items:center;gap:2.5rem}
+.nav-r a{font-size:.75rem;color:var(--fg2);text-decoration:none;letter-spacing:.15em;text-transform:uppercase;font-weight:400;transition:color .3s;position:relative}
+.nav-r a::after{content:'';position:absolute;bottom:-4px;left:0;right:0;height:1px;background:var(--gold);transform:scaleX(0);transition:transform .3s}
+.nav-r a:hover{color:var(--gold2)}
+.nav-r a:hover::after{transform:scaleX(1)}
+.nav-cta{padding:.7rem 1.5rem!important;border:1px solid var(--gold)!important;color:var(--gold)!important;transition:all .3s!important;position:relative;overflow:hidden}
+.nav-cta::before{content:'';position:absolute;inset:0;background:var(--gold);transform:scaleX(0);transform-origin:left;transition:transform .3s;z-index:-1}
+.nav-cta:hover::before{transform:scaleX(1)}
+.nav-cta:hover{color:var(--bg)!important}
+.nav-cta::after{display:none!important}
+@media(max-width:768px){.nav-r a:not(.nav-cta){display:none}}
+
+/* ── HERO ── */
+.hero{height:100vh;position:relative;display:flex;align-items:flex-end;padding:0 5% 6rem;overflow:hidden}
+.hero-bg{position:absolute;inset:0}
+.hero-bg img{width:100%;height:100%;object-fit:cover;transform:scale(1.05);animation:hero-zoom 20s ease-out forwards}
+@keyframes hero-zoom{to{transform:scale(1)}}
+.hero-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(10,8,6,.97) 0%,rgba(10,8,6,.55) 45%,rgba(10,8,6,.25) 100%)}
+.hero-content{position:relative;z-index:4;max-width:650px}
+.hero-tag{font-size:.7rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);margin-bottom:1.5rem;font-weight:500;opacity:0;animation:fade-up .8s ease forwards .3s}
+.hero h1{font-family:var(--serif);font-size:clamp(3rem,8vw,5.5rem);font-weight:300;line-height:1;margin-bottom:1.5rem;font-style:italic;opacity:0;animation:fade-up .8s ease forwards .5s}
+/* Gold shimmer on h1 */
+.hero h1 span{background:linear-gradient(90deg,var(--gold),var(--gold2),var(--gold3),var(--gold2),var(--gold));background-size:200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:gold-shimmer 4s linear infinite}
+@keyframes gold-shimmer{to{background-position:200%}}
+.hero p{font-size:1rem;color:var(--fg2);line-height:1.8;margin-bottom:2.5rem;max-width:450px;font-weight:300;opacity:0;animation:fade-up .8s ease forwards .7s}
+.hero-btns{display:flex;gap:1rem;flex-wrap:wrap;opacity:0;animation:fade-up .8s ease forwards .9s}
+@keyframes fade-up{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+/* Floating fire emoji near chef section */
+.floating-fire{position:absolute;font-size:2.5rem;animation:fire-float 3s ease-in-out infinite;z-index:5;filter:drop-shadow(0 0 20px #ff6600)}
+@keyframes fire-float{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-15px) scale(1.1)}}
+
+.btn-gold{display:inline-flex;align-items:center;gap:.5rem;padding:1rem 2.2rem;background:var(--gold);color:var(--bg);font-size:.8rem;letter-spacing:.15em;text-transform:uppercase;font-weight:500;text-decoration:none;transition:all .4s;position:relative;overflow:hidden}
+.btn-gold::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.2),transparent);opacity:0;transition:opacity .3s}
+.btn-gold:hover{background:var(--gold2);transform:translateY(-2px);box-shadow:0 8px 30px rgba(200,160,96,.4)}
+.btn-gold:hover::after{opacity:1}
+.btn-ghost{display:inline-flex;align-items:center;gap:.5rem;padding:1rem 2.2rem;border:1px solid var(--fg3);color:var(--fg2);font-size:.8rem;letter-spacing:.15em;text-transform:uppercase;font-weight:300;text-decoration:none;transition:all .3s}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold);transform:translateY(-2px)}
+
+/* ── DIVIDER ── */
+.divider{display:flex;align-items:center;justify-content:center;padding:3rem 5%;gap:2rem;position:relative;z-index:1}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,#1a1714,transparent)}
+.divider span{font-family:var(--serif);font-size:1rem;color:var(--gold);font-style:italic;white-space:nowrap}
+
+/* ── REVEAL ── */
+.reveal{opacity:0;transform:translateY(40px);transition:opacity .8s cubic-bezier(.23,1,.32,1),transform .8s cubic-bezier(.23,1,.32,1)}
+.reveal.visible{opacity:1;transform:translateY(0)}
+.reveal-left{opacity:0;transform:translateX(-50px);transition:opacity .8s cubic-bezier(.23,1,.32,1),transform .8s cubic-bezier(.23,1,.32,1)}
+.reveal-left.visible{opacity:1;transform:translateX(0)}
+.reveal-right{opacity:0;transform:translateX(50px);transition:opacity .8s cubic-bezier(.23,1,.32,1),transform .8s cubic-bezier(.23,1,.32,1)}
+.reveal-right.visible{opacity:1;transform:translateX(0)}
+.reveal-delay-1{transition-delay:.1s}
+.reveal-delay-2{transition-delay:.2s}
+.reveal-delay-3{transition-delay:.3s}
+.reveal-delay-4{transition-delay:.4s}
+.reveal-delay-5{transition-delay:.5s}
+.reveal-delay-6{transition-delay:.6s}
+
+/* ── ABOUT ── */
+.about{padding:5rem 5%;display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;position:relative;z-index:1}
+.about-img{border-radius:4px;overflow:hidden;aspect-ratio:3/4;max-height:550px;position:relative}
+.about-img::before{content:'🔥';position:absolute;top:1.5rem;right:1.5rem;font-size:2rem;z-index:2;animation:fire-float 3s ease-in-out infinite;filter:drop-shadow(0 0 15px #ff6600)}
+.about-img img{width:100%;height:100%;object-fit:cover;transition:transform .8s cubic-bezier(.23,1,.32,1)}
+.about-img:hover img{transform:scale(1.04)}
+/* Ember border glow */
+.about-img::after{content:'';position:absolute;inset:0;border:2px solid rgba(200,160,96,0);border-radius:4px;transition:border-color .4s;box-shadow:inset 0 0 0 rgba(200,160,96,0);pointer-events:none}
+.about-img:hover::after{border-color:rgba(200,160,96,.3);box-shadow:inset 0 0 30px rgba(200,160,96,.06),0 0 40px rgba(200,160,96,.1)}
+.about-text .sec-tag{font-size:.7rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);margin-bottom:1rem;font-weight:500}
+.about-text h2{font-family:var(--serif);font-size:clamp(2rem,4vw,3rem);font-weight:300;margin-bottom:1.5rem;font-style:italic;line-height:1.2}
+.about-text p{font-size:.95rem;color:var(--fg2);line-height:1.9;margin-bottom:1rem;font-weight:300}
+@media(max-width:768px){.about{grid-template-columns:1fr}.about-img{max-height:400px}}
+
+/* ── MENU ── */
+.menu{padding:5rem 5%;position:relative;z-index:1}
+.menu .sec-head{text-align:center;margin-bottom:3rem}
+.menu .sec-tag{font-size:.7rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);margin-bottom:1rem;font-weight:500}
+.menu .sec-title{font-family:var(--serif);font-size:clamp(2rem,4vw,3rem);font-weight:300;font-style:italic}
+
+/* Menu category tabs */
+.menu-tabs{display:flex;justify-content:center;gap:.5rem;margin-bottom:3rem;flex-wrap:wrap}
+.menu-tab{padding:.6rem 1.6rem;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--fg3);border:1px solid #1a1714;background:transparent;cursor:pointer;font-family:var(--sans);font-weight:400;transition:all .3s}
+.menu-tab:hover{border-color:var(--fg3);color:var(--fg2)}
+.menu-tab.active{border-color:var(--gold);color:var(--gold);background:rgba(200,160,96,.06)}
+
+.menu-section{display:none}
+.menu-section.active{display:block}
+
+.menu-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:2rem}
+.menu-card{border:1px solid #1a1714;border-radius:4px;overflow:hidden;transition:all .5s cubic-bezier(.23,1,.32,1);transform-style:preserve-3d;position:relative;background:#0d0b08}
+.menu-card::after{content:'';position:absolute;inset:0;box-shadow:0 0 0 1px rgba(200,160,96,0);transition:box-shadow .4s}
+.menu-card:hover{border-color:rgba(200,160,96,.3);transform:translateY(-8px)}
+.menu-card:hover::after{box-shadow:0 20px 60px rgba(200,160,96,.12)}
+.menu-card-img{aspect-ratio:16/10;overflow:hidden;position:relative}
+.menu-card-img img{width:100%;height:100%;object-fit:cover;transition:transform .7s cubic-bezier(.23,1,.32,1)}
+.menu-card:hover .menu-card-img img{transform:scale(1.08)}
+.menu-card-img-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(13,11,8,.6),transparent 60%);z-index:1}
+.menu-badge{position:absolute;top:.75rem;left:.75rem;background:rgba(200,160,96,.9);color:var(--bg);font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;padding:.3rem .7rem;font-weight:500;z-index:2}
+.menu-card-info{padding:1.5rem;position:relative}
+.menu-card-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.5rem}
+.menu-card-info h3{font-family:var(--serif);font-size:1.3rem;font-weight:400;font-style:italic}
+.menu-price{font-size:1rem;color:var(--gold);font-weight:500;white-space:nowrap}
+.menu-card-info p{font-size:.82rem;color:var(--fg3);line-height:1.6;font-weight:300}
+.menu-tags{display:flex;gap:.4rem;margin-top:.75rem;flex-wrap:wrap}
+.menu-tag-pill{font-size:.6rem;padding:.2rem .6rem;border:1px solid #1a1714;color:var(--fg3);letter-spacing:.08em;text-transform:uppercase}
+
+/* Fancy divider between menu sections */
+.menu-divider{display:flex;align-items:center;gap:1.5rem;margin:3rem 0 2.5rem;padding:0 0}
+.menu-divider::before,.menu-divider::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,#1a1714)}
+.menu-divider span{font-family:var(--serif);font-size:.9rem;color:var(--gold);font-style:italic;white-space:nowrap}
+
+/* ── AMBIANCE ── */
+.ambiance{padding:5rem 5%;position:relative;z-index:1}
+.amb-grid{display:grid;grid-template-columns:2fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:.75rem;height:520px;margin-top:3rem}
+.amb-item{overflow:hidden;border-radius:2px;position:relative;cursor:pointer}
+.amb-item img{width:100%;height:100%;object-fit:cover;transition:transform .6s cubic-bezier(.23,1,.32,1),filter .4s}
+.amb-item:hover img{transform:scale(1.08);filter:brightness(1.1)}
+.amb-item:first-child{grid-row:span 2}
+.amb-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(200,160,96,.2),transparent);opacity:0;transition:opacity .4s}
+.amb-item:hover .amb-overlay{opacity:1}
+@media(max-width:768px){.amb-grid{grid-template-columns:1fr 1fr;height:auto}.amb-item img{aspect-ratio:1}.amb-item:first-child{grid-row:auto}}
+
+/* ── RESERVE ── */
+.reserve{padding:6rem 5%;text-align:center;background:linear-gradient(to bottom,var(--bg),#110e0a);position:relative;z-index:1;overflow:hidden}
+.reserve::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;height:600px;background:radial-gradient(circle,rgba(200,160,96,.04) 0%,transparent 70%);pointer-events:none;animation:reserve-pulse 6s ease-in-out infinite}
+@keyframes reserve-pulse{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.1)}}
+.reserve h2{font-family:var(--serif);font-size:clamp(2.5rem,5vw,4rem);font-weight:300;font-style:italic;margin-bottom:1rem;position:relative}
+.reserve p{font-size:1rem;color:var(--fg2);margin-bottom:2.5rem;max-width:480px;margin-left:auto;margin-right:auto;line-height:1.8;font-weight:300;position:relative}
+.reserve-info{display:flex;justify-content:center;gap:3rem;margin-top:3rem;flex-wrap:wrap}
+.reserve-info div{text-align:center;position:relative}
+.reserve-info .ri-label{font-size:.65rem;letter-spacing:.2em;text-transform:uppercase;color:var(--fg3);margin-bottom:.5rem;font-weight:500}
+.reserve-info .ri-val{font-family:var(--serif);font-size:1.1rem;color:var(--fg);font-style:italic}
+
+/* ── FOOTER ── */
+footer{padding:3rem 5%;border-top:1px solid #1a1714;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;position:relative;z-index:1}
+footer p{font-size:.75rem;color:var(--fg3)}
+footer a{color:var(--gold);text-decoration:none;font-size:.75rem;font-weight:500;transition:opacity .3s}
+footer a:hover{opacity:.7}
+</style>
+</head>
+<body>
+
+<div class="scroll-progress" id="scrollBar"></div>
+
+<nav id="mainNav">
+  <a href="#" class="logo">Ember &amp; Oak</a>
+  <div class="nav-r">
+    <a href="#about">Story</a>
+    <a href="#menu">Menu</a>
+    <a href="#ambiance">Gallery</a>
+    <a href="#reserve" class="nav-cta">Reserve</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-bg">
+    <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1600&h=900&fit=crop&q=80" alt="Fine dining atmosphere" loading="eager">
+  </div>
+  <!-- Fire particle canvas -->
+  <canvas id="fire-canvas"></canvas>
+  <div class="hero-content">
+    <div class="hero-tag">Fine Dining Experience</div>
+    <h1>Where flavour<br>meets <span>fire</span></h1>
+    <p>Seasonal ingredients, open-flame cooking, and a curated wine collection — served in a warm, intimate setting in the heart of the city.</p>
+    <div class="hero-btns">
+      <a href="#reserve" class="btn-gold">Reserve a Table</a>
+      <a href="#menu" class="btn-ghost">View Menu</a>
+    </div>
+  </div>
+</section>
+
+<div class="divider"><span>Est. 2018 — Hyderabad</span></div>
+
+<section class="about" id="about">
+  <div class="about-img reveal-left">
+    <img src="https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=600&h=800&fit=crop&q=80" alt="Chef preparing dish" loading="lazy">
+  </div>
+  <div class="about-text reveal-right">
+    <div class="sec-tag">Our Story</div>
+    <h2>Crafted with fire,<br>served with soul</h2>
+    <p>Ember &amp; Oak began with a simple belief: the best meals are built around fire. Our open-flame kitchen brings you dishes that honour tradition while embracing modern technique.</p>
+    <p>Every ingredient is sourced from local farms. Every plate is a conversation between the chef and the season. We don't follow trends — we follow flavour.</p>
+    <p style="color:var(--gold);font-style:italic;margin-top:1.5rem;font-family:var(--serif);font-size:1.15rem">"Fire doesn't just cook food — it transforms it."</p>
+  </div>
+</section>
+
+<section class="menu" id="menu">
+  <div class="sec-head reveal">
+    <div class="sec-tag">The Menu</div>
+    <h2 class="sec-title">Signature creations</h2>
+  </div>
+
+  <!-- Category tabs -->
+  <div class="menu-tabs">
+    <button class="menu-tab active" data-tab="starters">Starters</button>
+    <button class="menu-tab" data-tab="mains">Mains</button>
+    <button class="menu-tab" data-tab="desserts">Desserts</button>
+    <button class="menu-tab" data-tab="drinks">Wine &amp; Drinks</button>
+  </div>
+
+  <!-- STARTERS -->
+  <div class="menu-section active" id="tab-starters">
+    <div class="menu-grid">
+      <div class="menu-card reveal reveal-delay-1">
+        <div class="menu-card-img">
+          <img src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&h=375&fit=crop&q=80" alt="Sourdough" loading="lazy">
+          <div class="menu-card-img-overlay"></div>
+          <span class="menu-badge">Chef's Pick</span>
+        </div>
+        <div class="menu-card-info">
+          <div class="menu-card-top"><h3>Charcoal Sourdough</h3><span class="menu-price">₹450</span></div>
+          <p>Slow-fermented charcoal sourdough, cultured butter whipped with smoked sea salt, served warm from the oak stone oven.</p>
+          <div class="menu-tags"><span class="menu-tag-pill">Vegetarian</span><span class="menu-tag-pill">Wood-fired</span></div>
+        </div>
+      </div>
+      <div class="menu-card reveal reveal-delay-2">
+        <div class="menu-card-img">
+          <img src="https://images.unsplash.com/photo-1559847844-5315695dadae?w=600&h=375&fit=crop&q=80" alt="Burrata" loading="lazy">
+          <div class="menu-card-img-overlay"></div>
+        </div>
+        <div class="menu-card-info">
+          <div class="menu-card-top"><h3>Burrata &amp; Heritage Tomatoes</h3><span class="menu-price">₹980</span></div>
+          <p>Imported Italian burrata, heirloom vine tomatoes, cold-pressed basil oil, aged balsamic reduction, microgreens.</p>
+          <div class="menu-tags"><span class="menu-tag-pill">Vegetarian</span><span class="menu-tag-pill">Seasonal</span></div>
+        </div>
+      </div>
+      <div class="menu-card reveal reveal-delay-3">
+        <div class="menu-card-img">
+          <img src="https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?w=600&h=375&fit=crop&q=80" alt="Scallops" loading="lazy">
+          <div class="menu-card-img-overlay"></div>
+          <span class="menu-badge">New</span>
+        </div>
+        <div class="menu-card-info">
+          <div class="menu-card-top"><h3>Scallop Crudo</h3><span class="menu-price">₹1,200</span></div>
+          <p>Hand-dived scallops, yuzu dressing, cucumber granita, finger lime caviar, toasted nori oil.</p>
+          <div class="menu-tags"><span class="menu-tag-pill">Seafood</span><span class="menu-tag-pill">Raw</span></div>
+        </div>
+      </div>
+      <div class="menu-card reveal reveal-delay-4">
+        <div class="menu-card-img">
+          <img src="https://images.unsplash.com/photo-1544025162-d76694265947?w=600&h=375&fit=crop&q=80" alt="Bone Marrow" loading="lazy">
+          <div class="menu-card-img-overlay"></div>
+        </div>
+        <div class="menu-card-info">
+          <div class="menu-card-top"><h3>Smoked Bone Marrow</h3><span class="menu-price">₹1,400</span></div>
+          <p>24-hour ember-smoked marrow bones, chimichurri verde, pickled shallot, toasted sourdough soldiers.</p>
+          <div class="menu-tags"><span class="menu-tag-pill">Ember-smoked</span><span class="menu-tag-pill">Signature</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAINS -->
+  <div class="menu-section" id="tab-mains">
+    <div class="menu-grid">
+      <div class="menu-card reveal reveal-delay-1">
+        <div class="menu-card-img">
+          <img src="https://images.unsplash.com/photo-1544025162-d76694265947?w=600&h=375&fit=crop&q=80" alt="Wagyu steak" loading="lazy">
+          <div class="menu-card-img-overlay"></div>
+          <span class="menu-badge">Signature</span>
+        </div>
+        <div class="menu-card-info">
+          <div class="menu-card-top"><h3>Wagyu Tartare</h3><span class="menu-price">₹2,400</span></div>
+          <p>Hand-cut A5 wagyu, aged soy emulsion, toasted sesame, micro shiso. Served with house-baked brioche crisps.</p>
+          <div class="menu-tags"><span class="menu-tag-pill">Beef</span><span class="menu-tag-pill">A5 Grade</span></div>
+        </div>
+      </div>
+      <div class="menu-card reveal reveal-delay-2">
+        <div class="menu-card-img">
+          <img src="https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=600&h=375&fit=crop&q=80" alt="Truffle risotto" loading="lazy">
+          <div class="menu-card-img-overlay"></div>
+        </div>
+        <div class="menu-card-info">
+          <div class="menu-card-top"><h3>Black Truffle Risotto</h3><span class="menu-price">₹1,800</span></div>
+          <p>Arborio rice, seasonal truffle shavings, aged parmesan foam, crispy porcini dust, finished with truffle oil.</p>
+          <div class="menu-tags"><span class="menu-tag-pill">Vegetarian</span><span class="menu-tag-pill">Truffle Season</span></div>
+        </div>
+      </div>
+      <div class="menu-card reveal reveal-delay-3">
+        <div class="menu-card-img">
+          <img src="https://images.unsplash.com/photo-1558030006-450675393462?w=600&h=375&fit=crop&q=80" alt="Charred lamb" loading="lazy">
+          <div class="menu-card-img-overlay"></div>
+          <span class="menu-badge">Chef's Pick</span>
+        </div>
+        <div class="menu-card-info">
+          <div class="menu-card-top"><h3>Ember-Charred Lamb</h3><span class="menu-price">₹2,800</span></div>
+          <p>72-hour marinated rack of lamb, charred over oakwood embers. Garden herbs, pomegranate jus reduction.</p>
+          <div class="menu-tags"><span class="menu-tag-pill">Lamb</span><span class="menu-tag-pill">Oakwood</span></div>
+        </div>
+      </div>
+      <div class="menu-card reveal reveal-delay-4">
+        <div class="menu-card-img">
+          <img src="https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=600&h=375&fit=crop&q=80" alt="Sea bass" loading="lazy">
+          <div class="menu-card-img-overlay"></div>
+          <span class="menu-badge">New</span>
+        </div>
+        <div class="menu-card-info">
+          <div class="menu-card-top"><h3>Whole Flame-Roasted Sea Bass</h3><span class="menu-price">₹2,200</span></div>
+          <p>Line-caught sea bass roasted whole in the wood oven, lemon-caper beurre blanc, fennel salad, saffron oil.</p>
+          <div class="menu-tags"><span class="menu-tag-pill">Seafood</span><span class="menu-tag-pill">Wood-roasted</span></div>
+        </div>
+      </div>
+      <div class="menu-card reveal reveal-delay-5">
+        <div class="menu-card-img">
+          <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&h=375&fit=crop&q=80" alt="Mushroom wellington" loading="lazy">
+          <div class="menu-card-img-overlay"></div>
+        </div>
+        <div class="menu-card-info">
+          <div class="menu-card-top"><h3>Wild Mushroom Wellington</h3><span class="menu-price">₹1,650</span></div>
+          <p>Seasonal wild mushroom duxelles, herb ricotta, golden puff pastry, madeira jus, crispy leek garnish.</p>
+          <div class="menu-tags"><span class="menu-tag-pill">Vegetarian</span><span class="menu-tag-pill">Baked</span></div>
+        </div>
+      </div>
+      <div class="menu-card reveal reveal-delay-6">
+        <div class="menu-card-img">
+          <img src="https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?w=600&h=375&fit=crop&q=80" alt="Duck breast" loading="lazy">
+          <div class="menu-card-img-overlay"></div>
+        </div>
+        <div class="menu-card-info">
+          <div class="menu-card-top"><h3>Confit Duck Breast</h3><span class="menu-price">₹2,600</span></div>
+          <p>48-hour confit duck, cherry and armagnac sauce, roasted root vegetables, duck fat crushed potatoes.</p>
+          <div class="menu-tags"><span class="menu-tag-pill">Duck</span><span class="menu-tag-pill">Confit</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DESSERTS -->
+  <div class="menu-section" id="tab-desserts">
+    <div class="menu-grid">
+      <div class="menu-card reveal reveal-delay-1">
+        <div class="menu-card-img">
+          <img src="https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=600&h=375&fit=crop&q=80" alt="Chocolate souffle" loading="lazy">
+          <div class="menu-card-img-overlay"></div>
+          <span class="menu-badge">Signature</span>
+        </div>
+        <div class="menu-card-info">
+          <div class="menu-card-top"><h3>Dark Chocolate Soufflé</h3><span class="menu-price">₹850</span></div>
+          <p>72% Valrhona chocolate soufflé, warm praline sauce poured tableside, vanilla bean ice cream. (Please allow 20 minutes.)</p>
+          <div class="menu-tags"><span class="menu-tag-pill">Hot</span><span class="menu-tag-pill">Must Order Ahead</span></div>
+        </div>
+      </div>
+      <div class="menu-card reveal reveal-delay-2">
+        <div class="menu-card-img">
+          <img src="https://images.unsplash.com/photo-1488477181946-6428a0291777?w=600&h=375&fit=crop&q=80" alt="Crème brûlée" loading="lazy">
+          <div class="menu-card-img-overlay"></div>
+        </div>
+        <div class="menu-card-info">
+          <div class="menu-card-top"><h3>Saffron Crème Brûlée</h3><span class="menu-price">₹720</span></div>
+          <p>Kashmiri saffron-infused custard, torched demerara crust, rose petal compote, almond tuile.</p>
+          <div class="menu-tags"><span class="menu-tag-pill">Flame-torched</span><span class="menu-tag-pill">Vegetarian</span></div>
+        </div>
+      </div>
+      <div class="menu-card reveal reveal-delay-3">
+        <div class="menu-card-img">
+          <img src="https://images.unsplash.com/photo-1551024506-0bccd828d307?w=600&h=375&fit=crop&q=80" alt="Ice cream" loading="lazy">
+          <div class="menu-card-img-overlay"></div>
+          <span class="menu-badge">Unique</span>
+        </div>
+        <div class="menu-card-info">
+          <div class="menu-card-top"><h3>Oak-Smoked Ice Cream</h3><span class="menu-price">₹680</span></div>
+          <p>House-churned vanilla bean ice cream cold-smoked over oak chips, salted caramel, candied hazelnuts.</p>
+          <div class="menu-tags"><span class="menu-tag-pill">Cold-smoked</span><span class="menu-tag-pill">House-made</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DRINKS -->
+  <div class="menu-section" id="tab-drinks">
+    <div class="menu-grid">
+      <div class="menu-card reveal reveal-delay-1">
+        <div class="menu-card-img">
+          <img src="https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=600&h=375&fit=crop&q=80" alt="Red wine" loading="lazy">
+          <div class="menu-card-img-overlay"></div>
+          <span class="menu-badge">Sommelier's Choice</span>
+        </div>
+        <div class="menu-card-info">
+          <div class="menu-card-top"><h3>Château Margaux 2018</h3><span class="menu-price">₹18,000</span></div>
+          <p>Premier Grand Cru Classé. Deep ruby, notes of blackcurrant, cedar, and graphite. Pairs beautifully with the wagyu or lamb.</p>
+          <div class="menu-tags"><span class="menu-tag-pill">Red</span><span class="menu-tag-pill">Bordeaux</span></div>
+        </div>
+      </div>
+      <div class="menu-card reveal reveal-delay-2">
+        <div class="menu-card-img">
+          <img src="https://images.unsplash.com/photo-1474722883778-792e7990302f?w=600&h=375&fit=crop&q=80" alt="White wine" loading="lazy">
+          <div class="menu-card-img-overlay"></div>
+        </div>
+        <div class="menu-card-info">
+          <div class="menu-card-top"><h3>Pouilly-Fumé 2021</h3><span class="menu-price">₹6,500</span></div>
+          <p>Loire Valley Sauvignon Blanc. Crisp, mineral-driven, with elderflower and citrus zest. Ideal with the scallop or sea bass.</p>
+          <div class="menu-tags"><span class="menu-tag-pill">White</span><span class="menu-tag-pill">Loire Valley</span></div>
+        </div>
+      </div>
+      <div class="menu-card reveal reveal-delay-3">
+        <div class="menu-card-img">
+          <img src="https://images.unsplash.com/photo-1536935338788-846bb9981813?w=600&h=375&fit=crop&q=80" alt="Cocktail" loading="lazy">
+          <div class="menu-card-img-overlay"></div>
+          <span class="menu-badge">House Signature</span>
+        </div>
+        <div class="menu-card-info">
+          <div class="menu-card-top"><h3>The Ember Old Fashioned</h3><span class="menu-price">₹950</span></div>
+          <p>Bourbon charred in-house oak barrel, smoked demerara, cardamom bitters, orange peel. Finished with applewood smoke dome.</p>
+          <div class="menu-tags"><span class="menu-tag-pill">Cocktail</span><span class="menu-tag-pill">House-crafted</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="ambiance" id="ambiance">
+  <div class="sec-head reveal" style="text-align:center;margin-bottom:3rem">
+    <div class="sec-tag" style="font-size:.7rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);margin-bottom:1rem;font-weight:500">The Space</div>
+    <h2 style="font-family:var(--serif);font-size:clamp(2rem,4vw,3rem);font-weight:300;font-style:italic">An atmosphere to remember</h2>
+  </div>
+  <div class="amb-grid">
+    <div class="amb-item reveal reveal-delay-1">
+      <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&h=1000&fit=crop&q=80" alt="Restaurant interior" loading="lazy">
+      <div class="amb-overlay"></div>
+    </div>
+    <div class="amb-item reveal reveal-delay-2">
+      <img src="https://images.unsplash.com/photo-1470337458703-46ad1756a187?w=500&h=500&fit=crop&q=80" alt="Wine glasses" loading="lazy">
+      <div class="amb-overlay"></div>
+    </div>
+    <div class="amb-item reveal reveal-delay-3">
+      <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=500&h=500&fit=crop&q=80" alt="Bar area" loading="lazy">
+      <div class="amb-overlay"></div>
+    </div>
+    <div class="amb-item reveal reveal-delay-4">
+      <img src="https://images.unsplash.com/photo-1559339352-11d035aa65de?w=500&h=500&fit=crop&q=80" alt="Candlelit table" loading="lazy">
+      <div class="amb-overlay"></div>
+    </div>
+  </div>
+</section>
+
+<section class="reserve reveal" id="reserve">
+  <h2>Reserve your evening</h2>
+  <p>Tables fill quickly on weekends. Reserve ahead to secure your preferred time and enjoy an unforgettable dining experience.</p>
+  <a href="https://wa.me/919490887997?text=Hi%2C%20I%27d%20like%20to%20reserve%20a%20table%20at%20Ember%20%26%20Oak." target="_blank" rel="noopener" class="btn-gold">Reserve via WhatsApp</a>
+  <div class="reserve-info">
+    <div><div class="ri-label">Hours</div><div class="ri-val">6 PM — 11 PM</div></div>
+    <div><div class="ri-label">Days</div><div class="ri-val">Tuesday — Sunday</div></div>
+    <div><div class="ri-label">Location</div><div class="ri-val">Jubilee Hills, Hyderabad</div></div>
+    <div><div class="ri-label">Dress Code</div><div class="ri-val">Smart Casual</div></div>
+  </div>
+</section>
+
+<footer>
+  <p>&copy; 2026 Ember &amp; Oak — Built by <a href="index.html">Praseed Studio</a></p>
+  <a href="index.html">← Back to Praseed Studio</a>
+</footer>
+
+<script>
+// ── Scroll progress + nav
+const scrollBar = document.getElementById('scrollBar');
+window.addEventListener('scroll', () => {
+  const pct = (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100;
+  scrollBar.style.width = pct + '%';
+  document.getElementById('mainNav').classList.toggle('scrolled', window.scrollY > 60);
+}, {passive:true});
+
+// ── Reveal on scroll
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('visible'); observer.unobserve(e.target); } });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal,.reveal-left,.reveal-right').forEach(el => observer.observe(el));
+
+// ── Menu tab switching
+const tabs = document.querySelectorAll('.menu-tab');
+const sections = document.querySelectorAll('.menu-section');
+tabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    tabs.forEach(t => t.classList.remove('active'));
+    sections.forEach(s => s.classList.remove('active'));
+    tab.classList.add('active');
+    const target = document.getElementById('tab-' + tab.dataset.tab);
+    if(target) {
+      target.classList.add('active');
+      // Re-trigger reveals in the new tab
+      target.querySelectorAll('.reveal,.reveal-left,.reveal-right').forEach(el => {
+        el.classList.remove('visible');
+        setTimeout(() => observer.observe(el), 10);
+      });
+    }
+  });
+});
+
+// ── 3D tilt on menu cards
+document.querySelectorAll('.menu-card').forEach(card => {
+  card.addEventListener('mousemove', e => {
+    const rect = card.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    card.style.transform = `perspective(900px) rotateX(${-y * 6}deg) rotateY(${x * 6}deg) translateY(-8px)`;
+  });
+  card.addEventListener('mouseleave', () => {
+    card.style.transition = 'transform .5s cubic-bezier(.23,1,.32,1)';
+    card.style.transform = '';
+  });
+  card.addEventListener('mouseenter', () => { card.style.transition = 'transform .1s'; });
+});
+
+// ── FIRE particle system on hero canvas
+(function() {
+  const canvas = document.getElementById('fire-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, particles = [];
+
+  function resize() {
+    W = canvas.width = canvas.offsetWidth;
+    H = canvas.height = canvas.offsetHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize, {passive:true});
+
+  // Fire particle colors: ember-dark → orange → gold → transparent
+  const fireColors = [
+    {r:180, g:40,  b:10},   // deep red
+    {r:220, g:80,  b:10},   // orange-red
+    {r:240, g:120, b:20},   // orange
+    {r:255, g:180, b:50},   // gold
+    {r:255, g:220, b:120},  // bright gold
+  ];
+
+  function spawnEmber(baseX) {
+    const colorIdx = Math.floor(Math.random() * fireColors.length);
+    const c = fireColors[colorIdx];
+    particles.push({
+      x: baseX + (Math.random() - 0.5) * 200,
+      y: H + 10,
+      vx: (Math.random() - 0.5) * 1.2,
+      vy: -(Math.random() * 2.5 + 1.5),
+      size: Math.random() * 5 + 2,
+      r: c.r, g: c.g, b: c.b,
+      life: 0,
+      maxLife: Math.random() * 120 + 80,
+      wobble: Math.random() * Math.PI * 2,
+      wobbleSpeed: Math.random() * 0.04 + 0.01,
+      isEmber: Math.random() > 0.6  // ember vs flame
+    });
+  }
+
+  function spawnFlame(baseX) {
+    particles.push({
+      x: baseX + (Math.random() - 0.5) * 80,
+      y: H + 20,
+      vx: (Math.random() - 0.5) * 0.5,
+      vy: -(Math.random() * 1.8 + 1),
+      size: Math.random() * 18 + 8,
+      r: 230, g: 90, b: 20,
+      life: 0,
+      maxLife: Math.random() * 80 + 60,
+      wobble: Math.random() * Math.PI * 2,
+      wobbleSpeed: Math.random() * 0.06 + 0.02,
+      isFlame: true
+    });
+  }
+
+  const spawnPoints = [W * 0.25, W * 0.45, W * 0.55, W * 0.75];
+  let frame = 0;
+
+  function animate() {
+    ctx.clearRect(0, 0, W, H);
+    frame++;
+
+    // Spawn particles
+    if(frame % 3 === 0) {
+      spawnPoints.forEach(px => {
+        spawnEmber(px);
+        if(Math.random() > 0.5) spawnFlame(px);
+      });
+    }
+
+    // Draw particles
+    particles = particles.filter(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.wobble += p.wobbleSpeed;
+      p.x += Math.sin(p.wobble) * 0.6;
+      p.life++;
+
+      const lifeRatio = p.life / p.maxLife;
+      const opacity = Math.sin(lifeRatio * Math.PI) * (p.isFlame ? 0.5 : 0.8);
+
+      if(p.isFlame) {
+        // Draw flame as radial gradient blob
+        const scale = 1 - lifeRatio * 0.5;
+        const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * scale);
+        grad.addColorStop(0, `rgba(255,200,50,${opacity * 0.7})`);
+        grad.addColorStop(0.4, `rgba(230,90,20,${opacity * 0.5})`);
+        grad.addColorStop(1, `rgba(150,30,10,0)`);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * scale, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+      } else {
+        // Draw ember as glowing dot
+        const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 2);
+        grad.addColorStop(0, `rgba(${p.r},${p.g},${p.b},${opacity})`);
+        grad.addColorStop(0.5, `rgba(${p.r},${p.g},${p.b},${opacity * 0.3})`);
+        grad.addColorStop(1, `rgba(${p.r},${p.g},${p.b},0)`);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * 2, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+      }
+
+      return p.life < p.maxLife && p.y > -50;
+    });
+
+    // Cap particle count
+    if(particles.length > 200) particles.splice(0, 10);
+
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>

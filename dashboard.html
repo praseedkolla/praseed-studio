@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexora — Analytics Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#07070e;--card:#0d0d18;--card2:#101020;--border:#1a1a30;--fg:#e0ddf5;--fg2:#8a86a8;--fg3:#5a5680;--purple:#6c5ce7;--purple2:#8b7af7;--purple3:#a99ef9;--green:#34d399;--red:#f87171;--amber:#fbbf24;--blue:#60a5fa;--pink:#f472b6;--sans:'Inter',system-ui,sans-serif}
+html{font-family:var(--sans);background:var(--bg);color:var(--fg)}
+body{display:flex;height:100vh;overflow:hidden;-webkit-font-smoothing:antialiased;position:relative}
+
+/* ── AURORA BACKGROUND ── */
+.aurora{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.orb{position:absolute;border-radius:50%;filter:blur(80px);animation:orb-drift 12s ease-in-out infinite}
+.orb-1{width:500px;height:500px;background:radial-gradient(circle,rgba(108,92,231,.12),transparent 70%);top:-100px;left:-100px;animation-delay:0s}
+.orb-2{width:400px;height:400px;background:radial-gradient(circle,rgba(96,165,250,.08),transparent 70%);bottom:-50px;right:0;animation-delay:-4s}
+.orb-3{width:300px;height:300px;background:radial-gradient(circle,rgba(244,114,182,.06),transparent 70%);top:40%;left:30%;animation-delay:-8s}
+@keyframes orb-drift{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(30px,-20px) scale(1.05)}66%{transform:translate(-20px,30px) scale(.95)}}
+
+/* ── SIDEBAR ── */
+.sidebar{width:220px;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:1.5rem 0;flex-shrink:0;position:relative;z-index:10}
+.sb-logo{padding:0 1.25rem 1.5rem;font-size:1.1rem;font-weight:800;color:var(--fg);display:flex;align-items:center;gap:.5rem;letter-spacing:-.02em}
+.sb-logo span{width:28px;height:28px;background:linear-gradient(135deg,var(--purple),var(--purple2));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.7rem;color:#fff;font-weight:700;box-shadow:0 4px 12px rgba(108,92,231,.4)}
+.sb-nav{flex:1;display:flex;flex-direction:column;gap:2px;padding:0 .75rem}
+.sb-item{display:flex;align-items:center;gap:.75rem;padding:.7rem 1rem;border-radius:8px;font-size:.82rem;color:var(--fg2);cursor:pointer;transition:all .2s;font-weight:500;border:none;background:transparent;width:100%;text-align:left;font-family:var(--sans);position:relative;overflow:hidden}
+.sb-item::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(108,92,231,.15),rgba(108,92,231,.05));opacity:0;transition:opacity .2s}
+.sb-item:hover::before{opacity:1}
+.sb-item:hover{color:var(--fg)}
+.sb-item.active{background:rgba(108,92,231,.15);color:var(--purple2);font-weight:600}
+.sb-item.active::after{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:60%;background:var(--purple2);border-radius:0 2px 2px 0}
+.sb-item svg{width:18px;height:18px;flex-shrink:0;opacity:.6;transition:opacity .2s}
+.sb-item.active svg,.sb-item:hover svg{opacity:1}
+.sb-section{font-size:.65rem;letter-spacing:.15em;text-transform:uppercase;color:var(--fg3);padding:.75rem 1rem;margin-top:.75rem;font-weight:600}
+.sb-bottom{padding:.75rem;border-top:1px solid var(--border);margin-top:auto}
+.sb-user{display:flex;align-items:center;gap:.75rem;padding:.5rem;border-radius:8px;transition:background .2s;cursor:pointer}
+.sb-user:hover{background:rgba(255,255,255,.04)}
+.sb-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--purple),#e040fb);display:flex;align-items:center;justify-content:center;font-size:.7rem;color:#fff;font-weight:700}
+.sb-user-info{font-size:.78rem;font-weight:500}
+.sb-user-info span{display:block;font-size:.68rem;color:var(--fg3);font-weight:400}
+
+/* ── MAIN ── */
+.main-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;z-index:1}
+.main{flex:1;overflow-y:auto;padding:2rem 2.5rem;scroll-behavior:smooth}
+.main::-webkit-scrollbar{width:4px}
+.main::-webkit-scrollbar-track{background:transparent}
+.main::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* ── TOPBAR ── */
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem}
+.topbar h1{font-size:1.5rem;font-weight:700;display:flex;align-items:center;gap:.5rem;transition:opacity .3s}
+.topbar h1 .view-icon{font-size:1.2rem}
+.topbar-r{display:flex;align-items:center;gap:1rem}
+.tb-search{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:.5rem 1rem;color:var(--fg);font-size:.82rem;width:200px;outline:none;font-family:var(--sans);transition:border-color .2s}
+.tb-search:focus{border-color:var(--purple)}
+.tb-btn{padding:.5rem 1.2rem;background:var(--purple);color:#fff;border:none;border-radius:8px;font-size:.78rem;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all .2s;position:relative;overflow:hidden}
+.tb-btn::after{content:'';position:absolute;inset:0;background:rgba(255,255,255,.1);opacity:0;transition:opacity .2s}
+.tb-btn:hover{background:var(--purple2);transform:translateY(-1px);box-shadow:0 4px 16px rgba(108,92,231,.4)}
+.tb-btn:hover::after{opacity:1}
+.tb-notif{width:36px;height:36px;border-radius:8px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.9rem;position:relative;transition:all .2s}
+.tb-notif:hover{border-color:var(--purple);background:rgba(108,92,231,.08)}
+.notif-dot{position:absolute;top:6px;right:6px;width:6px;height:6px;border-radius:50%;background:var(--red);border:1px solid var(--bg)}
+
+/* ── METRICS ── */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem}
+.metric-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.25rem;transition:all .3s;cursor:default;position:relative;overflow:hidden}
+.metric-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(108,92,231,.04),transparent);opacity:0;transition:opacity .3s}
+.metric-card:hover::before{opacity:1}
+.metric-card:hover{border-color:rgba(108,92,231,.3);transform:translateY(-2px);box-shadow:0 8px 30px rgba(108,92,231,.12)}
+.mc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem}
+.mc-label{font-size:.72rem;color:var(--fg3);text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+.mc-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.9rem}
+.mc-val{font-size:1.75rem;font-weight:800;letter-spacing:-.02em;margin-bottom:.25rem}
+.mc-change{font-size:.72rem;font-weight:600;display:flex;align-items:center;gap:.25rem}
+.mc-change.up{color:var(--green)}
+.mc-change.down{color:var(--red)}
+
+/* ── CHARTS ── */
+.charts-row{display:grid;grid-template-columns:2fr 1fr;gap:1rem;margin-bottom:2rem}
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.5rem}
+.cc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem}
+.cc-head h3{font-size:.9rem;font-weight:700}
+.cc-tabs{display:flex;gap:.5rem}
+.cc-tab{font-size:.68rem;padding:.35rem .75rem;border-radius:6px;cursor:pointer;font-weight:500;color:var(--fg3);background:transparent;border:1px solid var(--border);font-family:var(--sans);transition:all .2s}
+.cc-tab:hover{border-color:var(--fg2);color:var(--fg2)}
+.cc-tab.active{background:var(--purple);color:#fff;border-color:var(--purple)}
+
+.bar-chart{display:flex;align-items:flex-end;gap:6px;height:200px;padding-top:1rem}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer}
+.bar{width:100%;border-radius:4px 4px 0 0;transform-origin:bottom;transition:filter .2s,transform .2s;position:relative}
+.bar:hover{filter:brightness(1.3);transform:scaleX(1.05)}
+.bar-label{font-size:.6rem;color:var(--fg3)}
+.bar-tooltip{position:absolute;top:-28px;left:50%;transform:translateX(-50%);background:var(--card2);border:1px solid var(--border);padding:.2rem .5rem;border-radius:4px;font-size:.6rem;white-space:nowrap;opacity:0;transition:opacity .2s;pointer-events:none;color:var(--fg)}
+.bar:hover .bar-tooltip{opacity:1}
+
+/* Donut */
+.donut-wrap{display:flex;align-items:center;justify-content:center;flex-direction:column;height:200px;gap:1.5rem}
+.donut{width:160px;height:160px;border-radius:50%;background:conic-gradient(var(--purple) 0% 42%,var(--blue) 42% 68%,var(--green) 68% 85%,var(--amber) 85% 100%);display:flex;align-items:center;justify-content:center;position:relative;transition:transform .4s cubic-bezier(.34,1.56,.64,1);cursor:pointer}
+.donut:hover{transform:scale(1.06) rotate(5deg)}
+.donut::after{content:'';position:absolute;width:100px;height:100px;border-radius:50%;background:var(--card)}
+.donut-center{position:relative;z-index:1;text-align:center}
+.donut-center .dc-num{font-size:1.4rem;font-weight:800}
+.donut-center .dc-label{font-size:.65rem;color:var(--fg3)}
+.donut-legend{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center}
+.dl-item{display:flex;align-items:center;gap:.35rem;font-size:.68rem;color:var(--fg2)}
+.dl-dot{width:8px;height:8px;border-radius:50%;transition:transform .2s}
+.dl-item:hover .dl-dot{transform:scale(1.5)}
+
+/* ── TABLE ── */
+.table-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.5rem}
+.table-card h3{font-size:.9rem;font-weight:700;margin-bottom:1rem}
+table{width:100%;border-collapse:collapse}
+th{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--fg3);text-align:left;padding:.75rem .5rem;border-bottom:1px solid var(--border);font-weight:600;cursor:pointer;transition:color .2s}
+th:hover{color:var(--fg2)}
+td{padding:.75rem .5rem;font-size:.82rem;border-bottom:1px solid #10101f;transition:background .2s}
+tr:hover td{background:rgba(255,255,255,.015)}
+tr:last-child td{border-bottom:none}
+.status{padding:.2rem .6rem;border-radius:6px;font-size:.68rem;font-weight:600}
+.status.active{background:rgba(52,211,153,.12);color:var(--green)}
+.status.pending{background:rgba(251,191,36,.12);color:var(--amber)}
+.status.churned{background:rgba(248,113,113,.12);color:var(--red)}
+.user-cell{display:flex;align-items:center;gap:.5rem}
+.uc-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:700;color:#fff;flex-shrink:0}
+
+/* ── BACK STRIP ── */
+.back-strip{padding:1rem 2.5rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:var(--card)}
+.back-strip a{font-size:.75rem;color:var(--purple2);text-decoration:none;font-weight:600;display:flex;align-items:center;gap:.5rem;transition:opacity .2s}
+.back-strip a:hover{opacity:.7}
+.back-strip p{font-size:.7rem;color:var(--fg3)}
+
+/* ── VIEW PANELS ── */
+.view-panel{display:none}
+.view-panel.active{display:block;animation:panel-enter .35s cubic-bezier(.23,1,.32,1)}
+@keyframes panel-enter{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── ANALYTICS VIEW ── */
+.analytics-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:2rem}
+.line-chart-wrap{height:200px;position:relative;overflow:hidden}
+.line-chart-wrap svg{width:100%;height:100%}
+.mini-stats{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:2rem}
+.mini-stat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1rem;transition:all .3s}
+.mini-stat:hover{border-color:rgba(108,92,231,.3);transform:translateY(-2px)}
+.ms-label{font-size:.7rem;color:var(--fg3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem}
+.ms-val{font-size:1.4rem;font-weight:700}
+.ms-bar-wrap{margin-top:.5rem;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.ms-bar{height:100%;border-radius:2px;transition:width 1.2s cubic-bezier(.23,1,.32,1)}
+
+/* ── CUSTOMERS VIEW ── */
+.customers-toolbar{display:flex;gap:.75rem;margin-bottom:1.5rem;align-items:center;flex-wrap:wrap}
+.filter-btn{padding:.4rem .9rem;font-size:.72rem;border-radius:6px;border:1px solid var(--border);color:var(--fg3);background:transparent;cursor:pointer;font-family:var(--sans);transition:all .2s}
+.filter-btn:hover,.filter-btn.active{border-color:var(--purple);color:var(--purple2);background:rgba(108,92,231,.08)}
+.customer-search{flex:1;max-width:240px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:.4rem .9rem;color:var(--fg);font-size:.8rem;outline:none;font-family:var(--sans)}
+.customer-search:focus{border-color:var(--purple)}
+.plan-badge{padding:.15rem .55rem;border-radius:4px;font-size:.65rem;font-weight:600;background:rgba(108,92,231,.15);color:var(--purple2)}
+.plan-badge.enterprise{background:rgba(244,114,182,.12);color:var(--pink)}
+.plan-badge.business{background:rgba(96,165,250,.12);color:var(--blue)}
+.plan-badge.pro{background:rgba(52,211,153,.12);color:var(--green)}
+
+/* ── REPORTS VIEW ── */
+.reports-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:2rem}
+.report-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.25rem;display:flex;align-items:center;gap:1rem;cursor:pointer;transition:all .3s}
+.report-card:hover{border-color:rgba(108,92,231,.3);transform:translateY(-2px);box-shadow:0 8px 24px rgba(108,92,231,.1)}
+.report-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.report-info h4{font-size:.85rem;font-weight:600;margin-bottom:.2rem}
+.report-info p{font-size:.72rem;color:var(--fg3)}
+.report-badge{margin-left:auto;font-size:.6rem;padding:.2rem .6rem;border-radius:4px;background:rgba(52,211,153,.12);color:var(--green);font-weight:600;white-space:nowrap}
+.report-badge.new{background:rgba(251,191,36,.12);color:var(--amber)}
+
+/* ── SETTINGS VIEW ── */
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+.settings-section{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.5rem;margin-bottom:1rem}
+.settings-section h3{font-size:.85rem;font-weight:700;margin-bottom:1.25rem;padding-bottom:.75rem;border-bottom:1px solid var(--border)}
+.setting-row{display:flex;justify-content:space-between;align-items:center;padding:.75rem 0;border-bottom:1px solid #10101f}
+.setting-row:last-child{border-bottom:none}
+.setting-label{font-size:.82rem;font-weight:500}
+.setting-sub{font-size:.7rem;color:var(--fg3);margin-top:.1rem}
+.toggle{width:40px;height:22px;border-radius:11px;background:var(--border);border:none;cursor:pointer;position:relative;transition:background .3s;flex-shrink:0}
+.toggle.on{background:var(--purple)}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .3s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.toggle.on::after{transform:translateX(18px)}
+.settings-input{background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:.4rem .8rem;color:var(--fg);font-size:.8rem;outline:none;font-family:var(--sans);width:160px;transition:border-color .2s}
+.settings-input:focus{border-color:var(--purple)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){.sidebar{display:none}.metrics{grid-template-columns:1fr 1fr}.charts-row{grid-template-columns:1fr}.analytics-grid{grid-template-columns:1fr}.reports-grid{grid-template-columns:1fr}.settings-grid{grid-template-columns:1fr}}
+@media(max-width:500px){.metrics{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- Aurora background -->
+<div class="aurora">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+</div>
+
+<aside class="sidebar">
+  <div class="sb-logo"><span>N</span> Nexora</div>
+  <nav class="sb-nav">
+    <button class="sb-item active" data-view="dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </button>
+    <button class="sb-item" data-view="analytics">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+      Analytics
+    </button>
+    <button class="sb-item" data-view="customers">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      Customers
+    </button>
+    <button class="sb-item" data-view="reports">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
+      Reports
+    </button>
+    <div class="sb-section">Settings</div>
+    <button class="sb-item" data-view="settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      Settings
+    </button>
+  </nav>
+  <div class="sb-bottom">
+    <div class="sb-user">
+      <div class="sb-avatar">PS</div>
+      <div class="sb-user-info">Praseed S.<span>Admin</span></div>
+    </div>
+  </div>
+</aside>
+
+<div class="main-wrap">
+<main class="main">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <h1 id="viewTitle"><span class="view-icon">📊</span> Dashboard</h1>
+    <div class="topbar-r">
+      <input type="text" class="tb-search" placeholder="Search..." id="globalSearch">
+      <div class="tb-notif" title="Notifications"><span>🔔</span><div class="notif-dot"></div></div>
+      <button class="tb-btn" id="actionBtn">Export Report</button>
+    </div>
+  </div>
+
+  <!-- ══ DASHBOARD VIEW ══ -->
+  <div class="view-panel active" id="view-dashboard">
+    <div class="metrics">
+      <div class="metric-card">
+        <div class="mc-top"><span class="mc-label">Total Revenue</span><div class="mc-icon" style="background:rgba(108,92,231,.15)">💰</div></div>
+        <div class="mc-val" data-count="48200" data-prefix="$" data-format="k">$0</div>
+        <div class="mc-change up">↑ 12.5% vs last month</div>
+      </div>
+      <div class="metric-card">
+        <div class="mc-top"><span class="mc-label">Active Users</span><div class="mc-icon" style="background:rgba(96,165,250,.15)">👥</div></div>
+        <div class="mc-val" data-count="2847">0</div>
+        <div class="mc-change up">↑ 8.3% vs last month</div>
+      </div>
+      <div class="metric-card">
+        <div class="mc-top"><span class="mc-label">Conversion Rate</span><div class="mc-icon" style="background:rgba(52,211,153,.15)">📈</div></div>
+        <div class="mc-val" data-count="324" data-suffix="%" data-divide="100">0%</div>
+        <div class="mc-change up">↑ 0.4% vs last month</div>
+      </div>
+      <div class="metric-card">
+        <div class="mc-top"><span class="mc-label">Churn Rate</span><div class="mc-icon" style="background:rgba(248,113,113,.15)">📉</div></div>
+        <div class="mc-val" data-count="120" data-suffix="%" data-divide="100">0%</div>
+        <div class="mc-change down">↓ 0.3% vs last month</div>
+      </div>
+    </div>
+
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="cc-head">
+          <h3>Revenue Overview</h3>
+          <div class="cc-tabs">
+            <button class="cc-tab active" data-period="monthly">Monthly</button>
+            <button class="cc-tab" data-period="weekly">Weekly</button>
+            <button class="cc-tab" data-period="daily">Daily</button>
+          </div>
+        </div>
+        <div class="bar-chart" id="barChart"></div>
+      </div>
+      <div class="chart-card">
+        <div class="cc-head"><h3>Traffic Sources</h3></div>
+        <div class="donut-wrap">
+          <div class="donut" title="Click to rotate">
+            <div class="donut-center"><div class="dc-num">12.4K</div><div class="dc-label">Total visits</div></div>
+          </div>
+          <div class="donut-legend">
+            <div class="dl-item"><div class="dl-dot" style="background:var(--purple)"></div>Direct 42%</div>
+            <div class="dl-item"><div class="dl-dot" style="background:var(--blue)"></div>Search 26%</div>
+            <div class="dl-item"><div class="dl-dot" style="background:var(--green)"></div>Social 17%</div>
+            <div class="dl-item"><div class="dl-dot" style="background:var(--amber)"></div>Referral 15%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <h3>Recent Customers</h3>
+      <table>
+        <thead><tr><th>Customer</th><th>Plan</th><th>MRR</th><th>Status</th><th>Joined</th></tr></thead>
+        <tbody>
+          <tr><td><div class="user-cell"><div class="uc-av" style="background:linear-gradient(135deg,#6c5ce7,#a78bfa)">AK</div>Arjun Kumar</div></td><td>Enterprise</td><td>$2,400/mo</td><td><span class="status active">Active</span></td><td>Mar 2026</td></tr>
+          <tr><td><div class="user-cell"><div class="uc-av" style="background:linear-gradient(135deg,#60a5fa,#3b82f6)">SN</div>Sarah Nguyen</div></td><td>Pro</td><td>$480/mo</td><td><span class="status active">Active</span></td><td>Feb 2026</td></tr>
+          <tr><td><div class="user-cell"><div class="uc-av" style="background:linear-gradient(135deg,#34d399,#10b981)">MR</div>Marco Rossi</div></td><td>Business</td><td>$960/mo</td><td><span class="status pending">Pending</span></td><td>Jan 2026</td></tr>
+          <tr><td><div class="user-cell"><div class="uc-av" style="background:linear-gradient(135deg,#f87171,#ef4444)">LP</div>Lisa Park</div></td><td>Pro</td><td>$480/mo</td><td><span class="status churned">Churned</span></td><td>Dec 2025</td></tr>
+          <tr><td><div class="user-cell"><div class="uc-av" style="background:linear-gradient(135deg,#fbbf24,#f59e0b)">DW</div>David Wilson</div></td><td>Enterprise</td><td>$2,400/mo</td><td><span class="status active">Active</span></td><td>Nov 2025</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ ANALYTICS VIEW ══ -->
+  <div class="view-panel" id="view-analytics">
+    <div class="mini-stats">
+      <div class="mini-stat">
+        <div class="ms-label">Page Views</div>
+        <div class="ms-val" data-count="142680">0</div>
+        <div class="ms-bar-wrap"><div class="ms-bar" data-width="78" style="background:var(--purple);width:0"></div></div>
+      </div>
+      <div class="mini-stat">
+        <div class="ms-label">Bounce Rate</div>
+        <div class="ms-val" data-count="342" data-suffix="%" data-divide="100">0%</div>
+        <div class="ms-bar-wrap"><div class="ms-bar" data-width="34" style="background:var(--amber);width:0"></div></div>
+      </div>
+      <div class="mini-stat">
+        <div class="ms-label">Avg. Session</div>
+        <div class="ms-val" data-count="427" data-suffix="s" data-divide="100">0s</div>
+        <div class="ms-bar-wrap"><div class="ms-bar" data-width="62" style="background:var(--blue);width:0"></div></div>
+      </div>
+      <div class="mini-stat">
+        <div class="ms-label">New vs Return</div>
+        <div class="ms-val" data-count="6300" data-suffix="%" data-divide="100">0%</div>
+        <div class="ms-bar-wrap"><div class="ms-bar" data-width="63" style="background:var(--green);width:0"></div></div>
+      </div>
+    </div>
+
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="cc-head"><h3>User Growth</h3><span style="font-size:.72rem;color:var(--green)">↑ 24% YoY</span></div>
+        <div style="height:200px;display:flex;align-items:flex-end;gap:8px;padding-top:1rem" id="analyticsBarChart"></div>
+      </div>
+      <div class="chart-card">
+        <div class="cc-head"><h3>Device Split</h3></div>
+        <div class="donut-wrap">
+          <div class="donut" style="background:conic-gradient(var(--blue) 0% 55%,var(--purple) 55% 80%,var(--green) 80% 100%)">
+            <div class="donut-center"><div class="dc-num">3</div><div class="dc-label">Devices</div></div>
+          </div>
+          <div class="donut-legend">
+            <div class="dl-item"><div class="dl-dot" style="background:var(--blue)"></div>Mobile 55%</div>
+            <div class="dl-item"><div class="dl-dot" style="background:var(--purple)"></div>Desktop 25%</div>
+            <div class="dl-item"><div class="dl-dot" style="background:var(--green)"></div>Tablet 20%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <h3>Top Pages</h3>
+      <table>
+        <thead><tr><th>Page</th><th>Views</th><th>Unique</th><th>Avg Time</th><th>Bounce</th></tr></thead>
+        <tbody>
+          <tr><td>/dashboard</td><td>28,400</td><td>12,100</td><td>4m 32s</td><td><span class="status active">22%</span></td></tr>
+          <tr><td>/analytics</td><td>18,200</td><td>8,400</td><td>3m 14s</td><td><span class="status active">31%</span></td></tr>
+          <tr><td>/customers</td><td>14,600</td><td>6,200</td><td>2m 48s</td><td><span class="status pending">44%</span></td></tr>
+          <tr><td>/reports</td><td>9,800</td><td>4,100</td><td>1m 52s</td><td><span class="status pending">56%</span></td></tr>
+          <tr><td>/settings</td><td>4,200</td><td>2,900</td><td>1m 10s</td><td><span class="status churned">68%</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ CUSTOMERS VIEW ══ -->
+  <div class="view-panel" id="view-customers">
+    <div class="metrics" style="grid-template-columns:repeat(3,1fr)">
+      <div class="metric-card">
+        <div class="mc-top"><span class="mc-label">Total Customers</span><div class="mc-icon" style="background:rgba(96,165,250,.15)">👤</div></div>
+        <div class="mc-val" data-count="1284">0</div>
+        <div class="mc-change up">↑ 5.2% this month</div>
+      </div>
+      <div class="metric-card">
+        <div class="mc-top"><span class="mc-label">Enterprise Accounts</span><div class="mc-icon" style="background:rgba(244,114,182,.15)">🏢</div></div>
+        <div class="mc-val" data-count="48">0</div>
+        <div class="mc-change up">↑ 3 new this month</div>
+      </div>
+      <div class="metric-card">
+        <div class="mc-top"><span class="mc-label">Avg. LTV</span><div class="mc-icon" style="background:rgba(251,191,36,.15)">💎</div></div>
+        <div class="mc-val" data-count="8400" data-prefix="$">$0</div>
+        <div class="mc-change up">↑ $240 vs last Q</div>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <h3 style="margin-bottom:.75rem">All Customers</h3>
+      <div class="customers-toolbar">
+        <input type="text" class="customer-search" placeholder="🔍 Search customers...">
+        <button class="filter-btn active">All</button>
+        <button class="filter-btn">Active</button>
+        <button class="filter-btn">Pending</button>
+        <button class="filter-btn">Churned</button>
+      </div>
+      <table>
+        <thead><tr><th>Customer</th><th>Plan</th><th>MRR</th><th>LTV</th><th>Status</th><th>Joined</th></tr></thead>
+        <tbody>
+          <tr><td><div class="user-cell"><div class="uc-av" style="background:linear-gradient(135deg,#6c5ce7,#a78bfa)">AK</div>Arjun Kumar</div></td><td><span class="plan-badge enterprise">Enterprise</span></td><td>$2,400</td><td>$28,800</td><td><span class="status active">Active</span></td><td>Mar 2026</td></tr>
+          <tr><td><div class="user-cell"><div class="uc-av" style="background:linear-gradient(135deg,#60a5fa,#3b82f6)">SN</div>Sarah Nguyen</div></td><td><span class="plan-badge pro">Pro</span></td><td>$480</td><td>$3,360</td><td><span class="status active">Active</span></td><td>Feb 2026</td></tr>
+          <tr><td><div class="user-cell"><div class="uc-av" style="background:linear-gradient(135deg,#34d399,#10b981)">MR</div>Marco Rossi</div></td><td><span class="plan-badge business">Business</span></td><td>$960</td><td>$2,880</td><td><span class="status pending">Pending</span></td><td>Jan 2026</td></tr>
+          <tr><td><div class="user-cell"><div class="uc-av" style="background:linear-gradient(135deg,#f87171,#ef4444)">LP</div>Lisa Park</div></td><td><span class="plan-badge pro">Pro</span></td><td>$480</td><td>$1,920</td><td><span class="status churned">Churned</span></td><td>Dec 2025</td></tr>
+          <tr><td><div class="user-cell"><div class="uc-av" style="background:linear-gradient(135deg,#fbbf24,#f59e0b)">DW</div>David Wilson</div></td><td><span class="plan-badge enterprise">Enterprise</span></td><td>$2,400</td><td>$19,200</td><td><span class="status active">Active</span></td><td>Nov 2025</td></tr>
+          <tr><td><div class="user-cell"><div class="uc-av" style="background:linear-gradient(135deg,#f472b6,#ec4899)">YT</div>Yuki Tanaka</div></td><td><span class="plan-badge business">Business</span></td><td>$960</td><td>$5,760</td><td><span class="status active">Active</span></td><td>Oct 2025</td></tr>
+          <tr><td><div class="user-cell"><div class="uc-av" style="background:linear-gradient(135deg,#a78bfa,#7c3aed)">CM</div>Carlos Mendez</div></td><td><span class="plan-badge pro">Pro</span></td><td>$480</td><td>$4,320</td><td><span class="status active">Active</span></td><td>Sep 2025</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ REPORTS VIEW ══ -->
+  <div class="view-panel" id="view-reports">
+    <div class="metrics" style="grid-template-columns:repeat(3,1fr)">
+      <div class="metric-card">
+        <div class="mc-top"><span class="mc-label">Reports Generated</span><div class="mc-icon" style="background:rgba(52,211,153,.15)">📄</div></div>
+        <div class="mc-val" data-count="142">0</div>
+        <div class="mc-change up">↑ 18 this month</div>
+      </div>
+      <div class="metric-card">
+        <div class="mc-top"><span class="mc-label">Scheduled Reports</span><div class="mc-icon" style="background:rgba(251,191,36,.15)">⏰</div></div>
+        <div class="mc-val" data-count="12">0</div>
+        <div class="mc-change up">Weekly &amp; Monthly</div>
+      </div>
+      <div class="metric-card">
+        <div class="mc-top"><span class="mc-label">Data Exported</span><div class="mc-icon" style="background:rgba(96,165,250,.15)">📦</div></div>
+        <div class="mc-val" data-count="2480" data-suffix="MB">0MB</div>
+        <div class="mc-change up">↑ 340MB this month</div>
+      </div>
+    </div>
+
+    <div class="reports-grid">
+      <div class="report-card"><div class="report-icon" style="background:rgba(108,92,231,.15)">📊</div><div class="report-info"><h4>Revenue Report Q1 2026</h4><p>Generated 2 days ago • PDF, 2.4 MB</p></div><span class="report-badge">Ready</span></div>
+      <div class="report-card"><div class="report-icon" style="background:rgba(96,165,250,.15)">👥</div><div class="report-info"><h4>Customer Cohort Analysis</h4><p>Generated today • Excel, 1.8 MB</p></div><span class="report-badge new">New</span></div>
+      <div class="report-card"><div class="report-icon" style="background:rgba(52,211,153,.15)">📈</div><div class="report-info"><h4>Growth Metrics Report</h4><p>Generated 5 days ago • PDF, 3.1 MB</p></div><span class="report-badge">Ready</span></div>
+      <div class="report-card"><div class="report-icon" style="background:rgba(251,191,36,.15)">💰</div><div class="report-info"><h4>MRR Breakdown Feb 2026</h4><p>Generated 1 week ago • PDF, 1.2 MB</p></div><span class="report-badge">Ready</span></div>
+      <div class="report-card"><div class="report-icon" style="background:rgba(244,114,182,.15)">🌐</div><div class="report-info"><h4>Traffic Analytics Summary</h4><p>Generated yesterday • CSV, 4.6 MB</p></div><span class="report-badge new">New</span></div>
+      <div class="report-card"><div class="report-icon" style="background:rgba(248,113,113,.15)">📉</div><div class="report-info"><h4>Churn Analysis Report</h4><p>Generated 3 days ago • PDF, 890 KB</p></div><span class="report-badge">Ready</span></div>
+    </div>
+
+    <div class="table-card">
+      <h3>Scheduled Reports</h3>
+      <table>
+        <thead><tr><th>Report Name</th><th>Frequency</th><th>Recipients</th><th>Next Run</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>Weekly Revenue Summary</td><td>Weekly (Mon)</td><td>3 people</td><td>Mar 25, 2026</td><td><span class="status active">Active</span></td></tr>
+          <tr><td>Monthly Growth Report</td><td>Monthly (1st)</td><td>5 people</td><td>Apr 1, 2026</td><td><span class="status active">Active</span></td></tr>
+          <tr><td>Churn Alert Digest</td><td>Daily</td><td>2 people</td><td>Tomorrow</td><td><span class="status active">Active</span></td></tr>
+          <tr><td>Enterprise Accounts Summary</td><td>Quarterly</td><td>8 people</td><td>Jun 1, 2026</td><td><span class="status pending">Paused</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ SETTINGS VIEW ══ -->
+  <div class="view-panel" id="view-settings">
+    <div class="settings-grid">
+      <div>
+        <div class="settings-section">
+          <h3>Account Settings</h3>
+          <div class="setting-row">
+            <div><div class="setting-label">Company Name</div><div class="setting-sub">Displayed in reports and exports</div></div>
+            <input class="settings-input" value="Nexora Inc." type="text">
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Timezone</div><div class="setting-sub">Used for all date/time display</div></div>
+            <input class="settings-input" value="UTC+5:30 (IST)" type="text">
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Currency</div><div class="setting-sub">Revenue reporting currency</div></div>
+            <input class="settings-input" value="USD ($)" type="text">
+          </div>
+        </div>
+        <div class="settings-section">
+          <h3>Notifications</h3>
+          <div class="setting-row">
+            <div><div class="setting-label">Email Alerts</div><div class="setting-sub">Revenue milestones and anomalies</div></div>
+            <button class="toggle on" onclick="this.classList.toggle('on')"></button>
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Churn Warnings</div><div class="setting-sub">Notify when churn exceeds 2%</div></div>
+            <button class="toggle on" onclick="this.classList.toggle('on')"></button>
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Weekly Digest</div><div class="setting-sub">Summary email every Monday</div></div>
+            <button class="toggle" onclick="this.classList.toggle('on')"></button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="settings-section">
+          <h3>Data &amp; Privacy</h3>
+          <div class="setting-row">
+            <div><div class="setting-label">Data Retention</div><div class="setting-sub">Keep analytics data for</div></div>
+            <input class="settings-input" value="24 months" type="text">
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Anonymise IPs</div><div class="setting-sub">GDPR compliance mode</div></div>
+            <button class="toggle on" onclick="this.classList.toggle('on')"></button>
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Cookie Consent</div><div class="setting-sub">Show consent banner</div></div>
+            <button class="toggle on" onclick="this.classList.toggle('on')"></button>
+          </div>
+        </div>
+        <div class="settings-section">
+          <h3>Integrations</h3>
+          <div class="setting-row">
+            <div><div class="setting-label">Slack</div><div class="setting-sub">Alert notifications to #nexora-alerts</div></div>
+            <button class="toggle on" onclick="this.classList.toggle('on')"></button>
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Stripe</div><div class="setting-sub">Sync payment data automatically</div></div>
+            <button class="toggle on" onclick="this.classList.toggle('on')"></button>
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Hubspot CRM</div><div class="setting-sub">Sync customer lifecycle events</div></div>
+            <button class="toggle" onclick="this.classList.toggle('on')"></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<div class="back-strip">
+  <p>Dashboard demo — Built by <a href="index.html" style="color:var(--purple2);text-decoration:none;font-weight:600">Praseed Studio</a></p>
+  <a href="index.html">← Back to Praseed Studio</a>
+</div>
+</div>
+
+<script>
+// ── Chart data
+const chartData = {
+  monthly: {
+    labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+    values:[30,42,35,55,48,62,58,72,65,80,75,92],
+    amounts:['$14K','$20K','$16K','$26K','$23K','$30K','$28K','$35K','$31K','$38K','$36K','$44K']
+  },
+  weekly: {
+    labels:['W1','W2','W3','W4','W5','W6','W7','W8'],
+    values:[45,58,52,70,65,80,74,88],
+    amounts:['$8.2K','$10.5K','$9.4K','$12.7K','$11.8K','$14.5K','$13.4K','$16K']
+  },
+  daily: {
+    labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+    values:[60,80,72,88,95,50,40],
+    amounts:['$2.1K','$2.8K','$2.5K','$3.1K','$3.3K','$1.7K','$1.4K']
+  }
+};
+
+function buildBarChart(containerId, data) {
+  const container = document.getElementById(containerId);
+  if(!container) return;
+  container.innerHTML = '';
+  data.labels.forEach((label, i) => {
+    const col = document.createElement('div');
+    col.className = 'bar-col';
+    col.innerHTML = `
+      <div class="bar" style="height:0%;background:linear-gradient(to top,var(--purple),var(--purple2))">
+        <div class="bar-tooltip">${data.amounts[i]}</div>
+      </div>
+      <div class="bar-label">${label}</div>`;
+    container.appendChild(col);
+    // Animate bar height
+    setTimeout(() => {
+      col.querySelector('.bar').style.transition = 'height .6s cubic-bezier(.23,1,.32,1)';
+      col.querySelector('.bar').style.height = data.values[i] + '%';
+    }, i * 50 + 100);
+  });
+}
+
+buildBarChart('barChart', chartData.monthly);
+
+// Analytics bar chart
+function buildAnalyticsChart() {
+  const container = document.getElementById('analyticsBarChart');
+  if(!container) return;
+  const months = ['Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar'];
+  const vals = [820,950,1100,1280,1450,1620,1800,2100,2400];
+  const max = Math.max(...vals);
+  container.innerHTML = '';
+  months.forEach((m, i) => {
+    const col = document.createElement('div');
+    col.style.cssText = 'flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer';
+    col.innerHTML = `
+      <div style="width:100%;border-radius:4px 4px 0 0;height:0;transition:height .6s cubic-bezier(.23,1,.32,1);background:linear-gradient(to top,var(--blue),#93c5fd);cursor:pointer" class="bar"></div>
+      <div style="font-size:.6rem;color:var(--fg3)">${m}</div>`;
+    container.appendChild(col);
+    setTimeout(() => {
+      col.querySelector('.bar').style.height = (vals[i] / max * 180) + 'px';
+    }, i * 60 + 100);
+  });
+}
+
+// Revenue tab switching
+document.querySelectorAll('.cc-tab[data-period]').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.cc-tab[data-period]').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    buildBarChart('barChart', chartData[tab.dataset.period]);
+  });
+});
+
+// ── Counter animation
+function animateCounter(el) {
+  const raw = parseInt(el.dataset.count);
+  const divide = el.dataset.divide ? parseFloat(el.dataset.divide) : 1;
+  const prefix = el.dataset.prefix || '';
+  const suffix = el.dataset.suffix || '';
+  const format = el.dataset.format;
+  const duration = 1800;
+  const start = performance.now();
+
+  function update(now) {
+    const t = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - t, 3);
+    const val = (raw * eased) / divide;
+
+    let display;
+    if(format === 'k') {
+      display = prefix + (val / 1000).toFixed(1) + 'K';
+    } else if(divide < 1) {
+      display = prefix + val.toFixed(2) + suffix;
+    } else {
+      display = prefix + (val >= 10000 ? (val/1000).toFixed(0) + 'K' : Math.floor(val).toLocaleString()) + suffix;
+    }
+    el.textContent = display;
+    if(t < 1) requestAnimationFrame(update);
+  }
+  requestAnimationFrame(update);
+}
+
+// ── Progress bars animation
+function animateBars() {
+  document.querySelectorAll('.ms-bar[data-width]').forEach(bar => {
+    setTimeout(() => {
+      bar.style.width = bar.dataset.width + '%';
+    }, 200);
+  });
+}
+
+// ── View switching
+const views = {
+  dashboard: { title: '📊 Dashboard', btn: 'Export Report' },
+  analytics:  { title: '📈 Analytics',  btn: 'Download Report' },
+  customers:  { title: '👥 Customers',  btn: 'Add Customer' },
+  reports:    { title: '📄 Reports',    btn: 'Generate Report' },
+  settings:   { title: '⚙️ Settings',   btn: 'Save Changes' }
+};
+
+function switchView(viewName) {
+  // Update sidebar
+  document.querySelectorAll('.sb-item').forEach(item => item.classList.remove('active'));
+  document.querySelector(`[data-view="${viewName}"]`).classList.add('active');
+
+  // Update panels
+  document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
+  const panel = document.getElementById('view-' + viewName);
+  if(panel) panel.classList.add('active');
+
+  // Update topbar
+  const cfg = views[viewName];
+  document.getElementById('viewTitle').innerHTML = `<span class="view-icon">${cfg.title.split(' ')[0]}</span> ${cfg.title.split(' ').slice(1).join(' ')}`;
+  document.getElementById('actionBtn').textContent = cfg.btn;
+
+  // Animate counters in new view
+  setTimeout(() => {
+    panel.querySelectorAll('[data-count]').forEach(el => animateCounter(el));
+    panel.querySelectorAll('.ms-bar[data-width]').forEach(bar => {
+      bar.style.width = '0';
+      setTimeout(() => { bar.style.width = bar.dataset.width + '%'; }, 100);
+    });
+    if(viewName === 'analytics') buildAnalyticsChart();
+  }, 50);
+
+  // Update search placeholder
+  const placeholders = { dashboard: 'Search...', analytics: 'Search metrics...', customers: 'Search customers...', reports: 'Search reports...', settings: 'Search settings...' };
+  document.getElementById('globalSearch').placeholder = placeholders[viewName] || 'Search...';
+}
+
+document.querySelectorAll('.sb-item[data-view]').forEach(btn => {
+  btn.addEventListener('click', () => switchView(btn.dataset.view));
+});
+
+// ── Run initial counters
+setTimeout(() => {
+  document.querySelectorAll('#view-dashboard [data-count]').forEach(el => animateCounter(el));
+}, 300);
+
+// ── Customer filter buttons
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+// ── Donut click to spin
+document.querySelectorAll('.donut').forEach(d => {
+  let deg = 0;
+  d.addEventListener('click', () => {
+    deg += 360;
+    d.style.transition = 'transform .8s cubic-bezier(.34,1.56,.64,1)';
+    d.style.transform = `rotate(${deg}deg) scale(1.06)`;
+    setTimeout(() => { d.style.transform = `rotate(${deg}deg)`; }, 800);
+  });
+});
+
+// ── Report cards click feedback
+document.querySelectorAll('.report-card').forEach(card => {
+  card.addEventListener('click', () => {
+    card.style.borderColor = 'var(--purple)';
+    card.style.boxShadow = '0 0 20px rgba(108,92,231,.3)';
+    setTimeout(() => { card.style.borderColor = ''; card.style.boxShadow = ''; }, 600);
+  });
+});
+</script>
+</body>
+</html>
